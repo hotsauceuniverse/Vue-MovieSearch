@@ -34,7 +34,7 @@ export default {
         },
         {
           name: 'Movie',
-          href: '/movie'
+          href: '/movie/tt4520988'
         },
         {
           name: 'About',
@@ -49,7 +49,7 @@ export default {
 <style lang="scss" scoped>
 header {
   height: 70px;
-  padding:0 40;
+  padding: 0 40px;
   display: flex;
   align-items: center;
   .logo {
