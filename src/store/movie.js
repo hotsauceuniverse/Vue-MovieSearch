@@ -9,8 +9,9 @@ export default {
   // data! - 상태(State)는 함수로 만들어서 객체 데이터를 반환해야 가변 이슈(데이터 불변성)가 발생하지 않습니다!
   state: () => ({ 
     movies: [],
-    message:'',
-    loading: false
+    message:'Search for the movie title!',
+    loading: false,
+    theMovie: {}
   }),
   // computed!
   getters: {},
@@ -30,48 +31,97 @@ export default {
   // 비동기처리 - 변이(Mutations)가 아닌 나머지 모든 로직을 관리합니다.
   actions: {
     async searchMovies({ state, commit }, payload) {
-      const res = await _fetchMovie({
-        ...payload,
-        page: 1
-      })
-      const { Search, totalResults } = res.data
-      commit('updateState', {
-        movies: _uniqBy(Search, 'imdbID') // 영화 중복값 제거 _uniqBy
-      })
-      console.log(totalResults) 
-      console.log(typeof totalResults) // String
+      if(state.loading) {
+        return 
+      } // 최초 searchMovies라는 액션을 실행 -> loading값은 false -> 조건문 실행 X -> 아래의 로직 실행
+        // 사용자가 enter키를 여러번 누르거나 해서 searchMovies라는 액션을 또 동작 시킬 때 -> loading값은 true의 상태 ->return문 실행
+        // 사용자가 searchMovies를 여러번 실행하는 것을 방지
+        commit('updateState', {
+        message: '', // 검색을 하기 시작하면 빈문자열로 시작하게 만듬(메세지 초기화)
+        loading: true
+      }) 
 
-      const total = parseInt(totalResults, 10)
-      const pageLength = Math.ceil(total / 10)
-
-      // 추가요청!
-      if (pageLength > 1) {
-        for (let page = 2; page <= pageLength; page +=1) {
-          if(page > (payload.number / 10)) break 
-          const res = await _fetchMovie({
-            ...payload,
-            page
-          })
-          const { Search } = res.data
-          commit('updateState', {
-            movies: [...state.movies, ..._uniqBy(Search, 'imdbID')]
-          })
+      try {
+        const res = await _fetchMovie({
+          ...payload,
+          page: 1
+        })
+        const { Search, totalResults } = res.data
+        commit('updateState', {
+          movies: _uniqBy(Search, 'imdbID') // 영화 중복값 제거 _uniqBy
+        })
+        console.log(totalResults) 
+        console.log(typeof totalResults) // String
+  
+        const total = parseInt(totalResults, 10)
+        const pageLength = Math.ceil(total / 10)
+  
+        // 추가요청!
+        if (pageLength > 1) {
+          for (let page = 2; page <= pageLength; page +=1) {
+            if(page > (payload.number / 10)) break 
+            const res = await _fetchMovie({
+              ...payload,
+              page
+            })
+            const { Search } = res.data
+            commit('updateState', {
+              movies: [...state.movies, ..._uniqBy(Search, 'imdbID')]
+            })
+          }
         }
+      } catch(message) {
+        commit('updateState', {
+          movies:[],
+          message
+        })
+      } finally {
+        commit('updateState', {
+          loading: false
+        })
       }
-    }  
-  },
+    },
+    async searchMovieWithId({ state, commit}, payload) {
+      if(state.loading) return
+
+      commit('updateState', {
+        theMovie: {},
+        loading: true
+      })
+      
+      try {
+        const res = await _fetchMovie(payload) 
+        commit('updateState', {
+          theMovie: res.data
+        })
+      } catch(error) {
+        commit('updateState', {
+          thieMovie: {}
+        })
+      } finally {
+        commit('updateState', {
+          loading: false
+        })
+      }
+    }
+  }
 }
 // context: state, getters, mutations를 활용할 수 있는 내용
 // payload: searchMovies가 실행 될 때 인수로 들어온 특정한 데이터를 받아줌
 
 function _fetchMovie(payload) {
-  const { title, type, year, page } = payload
+  const { title, type, year, page, id } = payload
   const OMDB_API_KEY = '7035c60c'
-  const url = `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${title}&type=${type}&y=${year}&page=${page}`
+  const url = id  // 삼항연산자
+    ? `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${id}` 
+    : `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${title}&type=${type}&y=${year}&page=${page}`
 
   return new Promise((resolve, reject) => {
     axios.get(url)
     .then(res => {
+      if (res.data.Error) {
+        reject(res.data.Error)
+      } // 예외처리
       resolve(res)
     })
     .catch(err => {
