@@ -21,20 +21,26 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import MovieItem from './MovieItem.vue'
 import Loader from './Loader.vue'
 
 export default {
   computed: {
-    movies() {
-      return this.$store.state.movie.movies
-    },
-    message() {
-      return this.$store.state.movie.message
-    },
-    loading() {
-      return this.$store.state.movie.loading
-    }
+    ...mapState('movie', [
+      'movies',
+      'message',
+      'loading'
+    ])
+    // movies() {
+    //   return this.$store.state.movie.movies
+    // },
+    // message() {
+    //   return this.$store.state.movie.message
+    // },
+    // loading() {
+    //   return this.$store.state.movie.loading
+    // } 위 코드와 동일 -> vuex의 ...mapState를 사용해 코드 단순화
   },
 
   components: {
