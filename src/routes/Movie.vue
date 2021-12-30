@@ -20,7 +20,11 @@
     <div v-else class="movie-details">
       <div 
         :style="{ backgroundImage: `url(${requestDiffSizeImage(theMovie.Poster)})` }"
-        class="poster"></div>
+        class="poster">
+        <Loader 
+        v-if="imageLoading"
+        absolute />  
+      </div>
       <div class="specs">
         <div class="title">
           {{ theMovie.Title }}
@@ -70,31 +74,50 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import Loader from '../components/Loader.vue'
 
 export default {
   components: {
     Loader
   },
-  computed: {
-    theMovie() {
-      return this.$store.state.movie.theMovie
-    },
-    loading() {
-      return this.$store.state.movie.loading
+  data() {
+    return {
+      imageLoading: true
     }
+  },
+  computed: {
+    ...mapState('movie', [
+      'theMovie',
+      'loading'
+    ])
+    // theMovie() {
+    //   return this.$store.state.movie.theMovie
+    // },
+    // loading() {
+    //   return this.$store.state.movie.loading
+    // } 위 코드와 동일 -> vuex의 ...mapState를 사용해 코드 단순화
   },
   created() {
     console.log(this.$route)
     this.$store.dispatch('movie/searchMovieWithId', {
       id: this.$route.params.id
     })
-  },
+  }, 
   methods: {
     requestDiffSizeImage(url, size = 700) {
-      return url.replace('SX300', `SX${size}`)
+      if(!url || url === 'N/A') {
+        this.imageLoading = false
+        return '' // 하나의 문자데이터를 반환해서 백그라운드이미지로 사용해야되기 때문에 undefined를 반환하지 않게 '' 빈문자열 반환 설정
+      } // 영화 포스터가 없거나 해당 사항이 없을 경우 로딩 아이콘이 계속 돌기 때문에 예외처리 과정
+      const src = url.replace('SX300', `SX${size}`) // 화면에 노출되는 300px의 해상도를 700px의 고해상도로 맞추는 작업
+      this.$loadImage(src) // async/await를 쓰지 않는 이유 : 로딩이 끝나고 나서야 src라는 이미지 주소가 반환되는 문제가 생김
+        .then(() => {
+          this.imageLoading = false
+        })
+      return src
     }
-  } // 화면에 노출되는 300px의 해상도를 700px의 고해상도로 맞추는 작업
+  } 
 }
 </script>
 
@@ -151,6 +174,7 @@ export default {
     background-color: $gray-200;
     background-size: cover;
     background-position: center;
+    position: relative;
   }
   .specs {
     flex-grow: 1;
@@ -197,7 +221,35 @@ export default {
       font-family: 'Oswald', sans-serif;
       font-size: 20px;
     }
-  }
+  }  
+  @include media-breakpoint-down(xl) {
+    .poster {
+      width: 300px;
+      height: 300px * 3 / 2;
+      margin-right: 40px;
+    }
+  } // 반응형 만들기
+  @include media-breakpoint-down(lg) {
+    display: block;
+    .poster {
+      margin-bottom: 40px;
+    }
+  } // 반응형 만들기
+  @include media-breakpoint-down(md) {
+    .specs {
+      .title {
+        font-size: 50px;
+      }
+      .ratings {
+        .rating-wrap {
+          display: block;
+          .rating {
+            margin-top: 10px;
+          }
+        }
+      }
+    }
+  } // 반응형 만들기
 }
 
 </style>
