@@ -75,6 +75,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "../scss/main.scss";
+
 .container {
   display: flex;
   > * {
@@ -100,5 +102,22 @@ export default {
     font-weight: 700;
     flex-shrink: 0; /* 감소가 될 수 있는 비율이 없도록 만들어줘야됨 */
   }
+  @include media-breakpoint-down(lg) {
+    display: block;
+    input {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+    .selects {
+      margin-right: 0;
+      margin-bottom: 10px;
+      select {
+        width: 100%;
+      }
+    }
+    .btn {
+      width: 100%;
+    }
+  } // 반응형 만들기
 }
 </style>
