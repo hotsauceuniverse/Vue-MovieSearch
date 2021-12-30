@@ -3,13 +3,15 @@
 import axios from 'axios' // http요청을 날릴 수 있는 패키지
 import _uniqBy from 'lodash/uniqBy' // 영화 중복값 제거 _uniqBy
 
+const _defaultMessage = 'Search for the movie title!'
+
 export default {
   // module! - 현재 파일(movie.js)을 Store 모듈로 활용하려면 다음 옵션이 필요합니다
   namespaced: true,
   // data! - 상태(State)는 함수로 만들어서 객체 데이터를 반환해야 가변 이슈(데이터 불변성)가 발생하지 않습니다!
   state: () => ({ 
     movies: [],
-    message:'Search for the movie title!',
+    message: _defaultMessage,
     loading: false,
     theMovie: {}
   }),
@@ -26,7 +28,9 @@ export default {
     },
     resetMovies(state) {
       state.movies = []
-    }
+      state.message = _defaultMessage
+      state.loading = false
+    } // 메인으로 왔을 때 상태 초기화 코드
   },
   // 비동기처리 - 변이(Mutations)가 아닌 나머지 모든 로직을 관리합니다.
   actions: {
