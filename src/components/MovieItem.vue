@@ -1,11 +1,13 @@
 <template>
-  <div 
+  <!-- RouterLink의 :to로 연결해 각 영화 포스터 클릭 시, movie탭으로 이동되게 설정  -->
+  <RouterLink
+    :to="`/movie/${movie.imdbID}`"  
     :style="{ backgroundImage: `url(${movie.Poster})` }"
     class="movie">
     <Loader 
       v-if="imageLoading"
       :size="1.5"
-      absolute /> 
+      absolute /> <!-- 부모요소기준의 가운데 배치  -->
     <div class="info">
       <div class="year">
         {{ movie.Year }}
@@ -14,7 +16,7 @@
         {{ movie.Title }}
       </div>
     </div>
-  </div>
+  </RouterLink>
 </template>
 
 <script>
@@ -42,9 +44,14 @@ export default {
   // created를 사용하면 안되는 이유 : component가 생성된 직후에 동작하기 때문이다. (html구조가 연결되지 않았다.) 
   methods: {
     async init() {
-      await this.$loadImage(this.movie.Poster)
+      const poster = this.movie.Poster
+      if(!poster || poster === 'N/A') {
+        this.imageLoading = false // 영화 포스터가 없거나 해당 사항이 없을 경우 로딩 아이콘이 계속 돌기 때문에 예외처리 과정
+      } else {
+      await this.$loadImage(poster)
       this.imageLoading = false
-    }
+      }
+    } // 이미지의 로드가 끝나고 나면 이미지의 로딩이 종료되도록 설정
   }
 }
 </script>
